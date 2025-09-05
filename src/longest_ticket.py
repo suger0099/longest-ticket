@@ -336,7 +336,6 @@ def solve_component(graph, comp, directed, exact_limit, time_limit):
     if n <= exact_limit:
         return subset_dp_longest_path(graph, comp)
     else:
-        # time_limit は「成分ごと」ではなく、ここでは“この成分探索の上限”として扱う
         return branch_and_bound_longest_simple_path(graph, comp, time_limit=time_limit)
 
 # ---------------------------
@@ -344,7 +343,7 @@ def solve_component(graph, comp, directed, exact_limit, time_limit):
 # ---------------------------
 
 def main():
-    ap = argparse.ArgumentParser(description="最長片道きっぷ：スケール対応版")
+    ap = argparse.ArgumentParser(description="最長片道きっぷ：スケール対応版（順序安定化つき）")
     ap.add_argument("--directed", action="store_true", help="入力を有向グラフとして扱う（既定: 無向）")
     ap.add_argument("--exact-limit", type=int, default=20, help="部分集合DPに切替える最大頂点数（既定: 20）")
     ap.add_argument("--time-limit", type=float, default=None, help="大規模用の分枝限定DFSの全体打ち切り秒（指定なし=最後まで探索）")
@@ -360,12 +359,11 @@ def main():
 
     comps = weakly_connected_components(graph)
 
-    # 全体の time-limit を各成分に配分（単純に等分ではなく、残り時間を逐次渡す）
     start_all = time.perf_counter()
     best_path = []
     best_len = float("-inf")
 
-    for i, comp in enumerate(comps):
+    for comp in comps:
         remaining = None
         if args.time_limit is not None:
             elapsed = time.perf_counter() - start_all
@@ -376,6 +374,10 @@ def main():
             best_path = path
         if args.time_limit is not None and (time.perf_counter() - start_all) >= args.time_limit:
             break
+
+    # ★ 無向グラフでは逆順と比べて辞書順が小さい方を採用（順序安定化）
+    if not args.directed and best_path and tuple(best_path) > tuple(reversed(best_path)):
+        best_path = list(reversed(best_path))
 
     for v in best_path:
         sys.stdout.write(str(v) + "\r\n")
