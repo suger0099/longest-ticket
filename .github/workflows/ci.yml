@@ -2,21 +2,27 @@ name: CI
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Show Python
+        run: python3 --version
+
       - name: Sample
-        run: |
-          py -3 src\longest_ticket.py < tests\sample.in > out.txt
-          type out.txt
+        run: python3 src/longest_ticket.py < tests/sample.in
+
       - name: Tree (undirected)
-        run: py -3 src\longest_ticket.py < tests\tree.in
+        run: python3 src/longest_ticket.py < tests/tree.in
+
       - name: DAG (directed)
-        run: py -3 src\longest_ticket.py --directed < tests\dag.in
+        run: python3 src/longest_ticket.py --directed < tests/dag.in
+
       - name: Cycle (general)
-        run: py -3 src\longest_ticket.py < tests\cycle.in
+        run: python3 src/longest_ticket.py < tests/cycle.in
+
       - name: Isolated
-        run: py -3 src\longest_ticket.py < tests\isolated.in
+        run: python3 src/longest_ticket.py < tests/isolated.in
